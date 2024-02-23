@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Speech Detection</title>
+    <link rel="icon" href="https://fav.farm/🔥" />
+</head>
+
+<body>
+
+    <div class="words" contenteditable>
+    </div>
+
+    <script>
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        const recognition = new SpeechRecognition();
+        recognition.interimResults = true;
+
+        let p = document.createElement('p');
+        const words = document.querySelector('.words');
+        words.appendChild(p);
+
+        recognition.addEventListener('result', e => {
+            let transcript = Array.from(e.results)
+                .map(result => result[0].transcript)
+                .join('');
+
+            console.log('Transcript:', transcript); // Logging transcript for debugging
+
+            // Convert transcript to lowercase
+            transcript = transcript.toLowerCase();
+
+            // Replace animal names with emojis in the transcript
+            const emojiTranscript = replaceAnimalsWithEmojis(transcript);
+
+            // Display the transcript with emojis
+            p.textContent = emojiTranscript;
+
+            // Scroll to the bottom to always show the latest transcript
+            words.scrollTop = words.scrollHeight;
+
+            // Check for weather command
+            if (transcript.includes('weather')) {
+                console.log('Weather command detected');
+                // Add your logic to handle weather command here
+                // For example, you can call a function to get weather information
+                getWeather();
+            }
+        });
+
+        recognition.addEventListener('end', () => {
+            // Create a new paragraph after a pause in speech
+            p = document.createElement('p');
+            words.appendChild(p);
+
+            // Restart recognition
+            recognition.start();
+        });
+
+        recognition.start();
+
+        // Function to replace animal names with emojis
+        function replaceAnimalsWithEmojis(text) {
+            const animalEmojis = {
+                'unicorn': '🦄',
+                'dog': '🐶',
+                'cat': '🐱',
+                // Add more animal emojis here
+            };
+
+            // Replace animal names with emojis in the text
+            for (const [animal, emoji] of Object.entries(animalEmojis)) {
+                const regex = new RegExp(animal, 'g');
+                text = text.replace(regex, emoji);
+            }
+
+            return text;
+        }
+
+        // Function to get weather information
+        function getWeather() {
+            // Add your code to fetch weather information using an API
+            // Replace this comment with your actual weather API call
+            console.log('Fetching weather information...');
+            fetchWeatherData('Pune'); // Example: Fetch weather for Pune
+        }
+
+        // Function to fetch weather data from the API and display it on the webpage
+        function fetchWeatherData(city) {
+            const apiKey = 'a63e4f8c9f4a91a407180b741caf9208'; // Your API key
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch weather data');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Weather data:', data);
+                    // Display the weather information on the webpage
+                    displayWeatherData(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error.message);
+                });
+        }
+
+        // Function to display weather data on the webpage
+        function displayWeatherData(data) {
+            // Extract relevant information from the weather data
+            const city = data.name;
+            const temperature = Math.round(data.main.temp - 273.15); // Convert temperature to Celsius
+            const condition = data.weather[0].main;
+
+            // Construct the weather message
+            const weatherMessage = `Weather in ${city}: ${temperature}°C, ${condition}`;
+
+            // Append the weather message to the existing content
+            p.textContent += `\n${weatherMessage}`;
+        }
+    </script>
+
+    <style>
+        html {
+            font-size: 10px;
+        }
+
+        body {
+            background: #ffc600;
+            font-family: 'helvetica neue';
+            font-weight: 200;
+            font-size: 20px;
+        }
+
+        .words {
+            max-width: 500px;
+            height: 300px;
+            /* Added height to enable scrolling */
+            overflow-y: auto;
+            /* Added to enable scrolling */
+            margin: 50px auto;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem 1rem 5rem;
+            background: -webkit-gradient(linear, 0 0, 0 100%, from(#d9eaf3), color-stop(4%, #fff)) 0 4px;
+            background-size: 100% 3rem;
+            position: relative;
+            line-height: 3rem;
+        }
+
+        p {
+            margin: 0;
+            /* Removed bottom margin */
+        }
+
+        .words:before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            top: 0;
+            left: 30px;
+            bottom: 0;
+            border: 1px solid;
+            border-color: transparent #efe4e4;
+        }
+    </style>
+
+</body>
+
+</html>

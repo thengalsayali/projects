@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tom Riddle's Diary - Interactive Chat</title>
+    <link rel="icon" href="https://fav.farm/🔥" />
+    <link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Garamond', serif;
+            font-weight: 400;
+            font-size: 20px;
+            color: #e6c484; /* Golden color for the text */
+        }
+        body {
+            background-image: url('https://i.pinimg.com/originals/30/e2/f0/30e2f04680cd33c6b5a361bf89c6bf3d.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .diary-container {
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.7); /* Transparent background */
+            border-radius: 20px; /* Rounded border */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            text-align: center;
+            font-family: 'Cinzel Decorative', serif; /* Use a curvy writing font */
+            font-size: 20px; /* Adjust font size */
+            line-height: 1.6; /* Increase line height for readability */
+            color: #e6c484; /* Golden color for the text */
+        }
+        .diary-content {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(74, 37, 24, 0.8); /* Transparent background with brown color */
+            border-radius: 20px; /* Rounded border */
+            font-family: 'Old Standard TT', serif; /* Use an old and ancient Harry Potter vibe font */
+            font-size: 20px; /* Adjust font size */
+            line-height: 1.6; /* Increase line height for readability */
+            color: #e6c484; /* Golden color for the text */
+            padding-left: 20px; /* Add padding for a more spacious feel */
+            background-size: cover; /* Ensure the background image covers the entire box */
+            background-position: center; /* Center the background image */
+            text-transform: none; /* Remove uppercase transformation */
+            font-weight: 600; /* Adjust font weight to make it slightly bold */
+        }
+        .speak-prompt {
+            color: #CCCCCC; /* Light gray color for the speak prompt */
+            font-style: italic;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="diary-container">
+        <h1 style="font-size: 3rem; margin-bottom: 2rem;">Tom Riddle's Diary</h1>
+        <div class="diary-content" contenteditable>
+            <span class="speak-prompt">Speak into the diary to converse...</span>
+        </div>
+    </div>
+    <script>
+        // Setting up speech recognition
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.interimResults = true;
+
+        // Selecting HTML elements
+        const diaryContent = document.querySelector('.diary-content');
+        const speakPrompt = document.querySelector('.speak-prompt');
+
+        // Initializing variables
+        let previousResponse = '';
+        let unknownResponseCount = 0;
+        let isSpeaking = false;
+
+        // Event listeners for speech recognition
+        recognition.addEventListener('start', () => {
+            speakPrompt.classList.add('hidden');
+        });
+
+        recognition.addEventListener('result', e => {
+            let transcript = Array.from(e.results)
+                .map(result => result[0].transcript)
+                .join('');
+            console.log('Transcript:', transcript); // Logging transcript for debugging
+            if (e.results[0].isFinal) {
+                isSpeaking = false;
+                diaryContent.scrollTop = diaryContent.scrollHeight;
+                respondToUser(transcript);
+            } else {
+                isSpeaking = true;
+            }
+        });
+
+        recognition.addEventListener('end', () => {
+            if (!isSpeaking) {
+                recognition.start();
+            }
+        });
+
+        // Starting speech recognition
+        recognition.start();
+
+        // Function to respond to user input
+        function respondToUser(input) {
+            const responses = {
+                'hello': 'Hello, young wizard!',
+                'how are you': 'As lively as ever, thanks for asking!',
+                'magic': 'Ah, the essence of our existence!',
+                'harry potter': 'Ah, the famous wizard. A worthy adversary.',
+                'avada kedavra': 'Let\'s not utter dark curses, shall we?',
+                'wand': 'The wand chooses the wizard, remember!',
+                'spell': 'Incantations can unlock incredible powers!',
+                'alohomora': 'Alohomora! The spell to unlock doors. Just in case you forget your keys.',
+                'expelliarmus': 'Expelliarmus! The disarming charm. Use it to play pranks on your friends!',
+                'wingardium leviosa': 'Wingardium Leviosa! Levitates objects. Great for cleaning your room without lifting a finger.',
+                'accio': 'Accio! Summons objects. Perfect for fetching snacks from the kitchen.',
+                'crucio': 'Crucio! The torture curse. Use it to make your annoying sibling do the dishes.',
+                'sectumsempra': 'Sectumsempra! Causes deep lacerations. Be careful with this one, it\'s not for pillow fights!',
+                'expecto patronum': 'Expecto Patronum! Summons a Patronus charm. Use it to scare away pesky Dementors.',
+                'lumos': 'Lumos! Creates light at the wand tip. Perfect for reading late at night without getting caught.',
+                'my name is': name => {
+                    const userName = name.split('is')[1].trim();
+                    return `Welcome to the wizarding world, ${userName}!`;
+                }
+            };
+            const keys = Object.keys(responses);
+            const matchedResponse = keys.find(key => input.toLowerCase().includes(key));
+            if (matchedResponse) {
+                const response = typeof responses[matchedResponse] === 'function' ? responses[matchedResponse](input) : responses[matchedResponse];
+                if (previousResponse !== response) {
+                    appendResponse(response);
+                    previousResponse = response;
+                    unknownResponseCount = 0; // Reset unknown response count
+                }
+            } else if (unknownResponseCount < 1) {
+                appendResponse("I'm not sure I understand...");
+                unknownResponseCount++;
+            }
+        }
+
+        // Function to append response to the diary
+        function appendResponse(response) {
+            const responseElement = document.createElement('p');
+            responseElement.textContent = response;
+            diaryContent.appendChild(responseElement);
+            diaryContent.scrollTop = diaryContent.scrollHeight;
+        }
+    </script>
+</body>
+</html>
